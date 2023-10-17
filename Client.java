@@ -70,7 +70,8 @@ public class Client {
             System.out.println("Ent the user name");
             String username = s.nextLine();
             System.out.println("Ent the password");
-            String password = s.nextLine();
+            Console console = System.console();
+            String password = new String(console.readPassword());
             String login_sender = "login:" + username + ":" + password;
             pr.println(login_sender);
             String login_clent_response[] = br.readLine().split(":");
@@ -87,7 +88,7 @@ public class Client {
                 int ch = Integer.parseInt(s.nextLine());
                 if (ch == 2) {
                     pr.println("go-back");
-                    signUp();
+                    start();
                 }
                 pr.println("retry");
             }
@@ -177,19 +178,40 @@ public class Client {
         // System.out.println("PRINTED ALL THE ELEMENT ");
         displayPreviousMessage(arr, user.name, splitter[ch - 1]);
         
-        while(true)
+        while(true)//dobut why dead code
         {
             String message = sendMessage();
-            // System.out.println("the message to bes sende is "+message+",");///s
-            pr.println(message);
-            if(message == null)
+            if(message.equals("exit"))
             {
                 System.out.println("the user want to got to the dashbord");
+                pr.println("exit");
                 dashBord();
+            }
+            else if(message.equals(""))
+            {
+                System.out.println("checking for new messages");
+                pr.println("new");
+                String temp = br.readLine();
+                if(temp.equals("go"))
+                {
+                    
+                    ArrayList<String> arri = (ArrayList<String>)ob.readObject();
+                    for (String mess : arri) 
+                    {
+                        System.out.println("message  ===== > "+mess);
+                        System.out.println(timing(mess.split("‡")[3])); 
+                        System.out.println(mess.split("‡")[2]);   
+                    }
+                }
+                else
+                {
+                    System.out.println("no new message response from server");
+                }
             }
             else
             {
                 System.out.println("the user want to continue to message");
+                pr.println(message);
             }  
         }
         
@@ -202,15 +224,26 @@ public class Client {
     }
     public String sendMessage()
     {
-        String message ="",temp;
+        String message ="",temp = "";
         Scanner s=new Scanner(System.in);
-
-        while(s.hasNextLine() && !(temp = s.nextLine()).equals("stop"))
+        temp = s.nextLine();
+        if(temp.isEmpty())
         {
-            message +=temp+"#";
+            System.out.println("is empty");
+            message = "";
         }
-        System.out.println(message.equals(""));
-        return message.equals("")?null:message.substring(0, message.length()-1);
+        else
+        {   
+            System.out.println("not empty");
+            do
+            {
+            message +=temp+"#";
+            }
+            while(s.hasNextLine()&& !(temp = s.nextLine()).equals("stop"));
+            System.out.println("the message is "+message);
+            message = message.substring(0, message.length()-1);
+        }
+        return message;
     }
     public static String getMessage()
     {
@@ -301,10 +334,33 @@ public class Client {
             System.out.println(user + " -- 1 " + i);
         }
     }
-
+    public void delAccount()
+    {
+        try
+        {
+            System.out.println("Are u sure about deleting the account");
+            System.out.println("for confirmation pls enter Y else N");
+            char ch= new Scanner(System.in).next().charAt(0);
+            if(Character.toLowerCase(ch)=='y')
+            {
+                System.out.println("user gave the confirmation to delete the account");
+                pr.println("delete");
+                start();
+            }
+            else
+            {
+                pr.print("go");
+                dashBord(); 
+            }
+        }catch(Exception e)
+        {
+            System.out.println("error in deleting the user");
+        }
+    }
+    // public newMessage()
     public void dashBord() {
         System.out.println("1 -- > Message");
-        System.out.println("2 -- > delete account ");
+        System.out.println("3 -- > delete account ");
         System.out.println("3 -- > Status");
         System.out.println("4 -- > go back");
         int i = s.nextInt();
@@ -312,13 +368,14 @@ public class Client {
             case 1:
                 pr.println(1);
                 messageUser();
-
                 break;
             case 2:
+            
                 viewAllUser();
                 break;
             case 3:
-                // delAccount();
+                pr.println(3);
+                delAccount();
                 break;
             default:
                 System.exit(0);
