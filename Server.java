@@ -8,7 +8,7 @@ public class Server
         try 
         {
         
-            ServerSocket obj = new ServerSocket(1234);
+            ServerSocket obj = new ServerSocket(9090);
             DataManager db = new DataManager();
         while(true)
         {   
@@ -16,7 +16,8 @@ public class Server
             System.out.println("new client connected");
             
             ClientHandler clienthandler = new ClientHandler(socket,db);
-            clienthandler.run();
+            System.out.println("kkk");
+            clienthandler.start();
         }}
          catch (Exception e) {
             

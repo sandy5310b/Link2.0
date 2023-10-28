@@ -60,10 +60,7 @@ public class DataManager
 
             File user_file = new File(Database , userName+".txt");
             FileWriter fr = new FileWriter(user_list , true);
-            
-                fr.write(Encryption.encrypt(userName+"‡"+mail_id+"‡"+password+"‡"+(isAdmin?"t":"f"))+"\n");
-           
-            
+            fr.write(Encryption.encrypt(userName+"‡"+mail_id+"‡"+password+"‡"+(isAdmin?"t":"f"))+"\n");
             fr.close();
             System.out.println(user_file.createNewFile());
             data.add(new User(userName, mail_id, password, isAdmin ,user_file));
@@ -71,12 +68,10 @@ public class DataManager
             } 
             catch (Exception e) 
             {
-                // TODO Auto-generated catch block
                 System.out.println("erroe in the add user block");
                 e.printStackTrace();
             }
         }
-    // }
     public synchronized String checkDuplicateUsername(String userName ,String mail_id)
     {
         for (User user : data) {
@@ -102,6 +97,11 @@ public class DataManager
         
         return arr;
     }
+    public ArrayList<String> getNewMessage(int n ,String sender , String reciver)
+    {
+        ArrayList<String> array = Message.getMessage(n,sender,reciver);
+        return array;
+    }
     public synchronized void writeMessage(String str ,String reciver) 
     {
         try
@@ -118,6 +118,28 @@ public class DataManager
             System.out.println(e.getMessage());
         }
     }
-    // String 
-
+    public void delete(User user)
+    { 
+        try
+        {
+            data.remove(user);
+            System.out.println("the user left");
+            for (User users : data) 
+            {
+                System.out.println(users.name);
+            }
+            FileWriter fr =new FileWriter(user_list);
+            for(User obj : data)
+            {
+                fr.write(Encryption.encrypt(obj.name+"‡"+obj.mail_id+"‡"+obj.password+"‡"+(obj.admin?"t":"f"))+"\n");
+            }
+            fr.close();
+            System.out.println("sucessfull deleted the user");
+        }
+        catch(Exception e)
+        {
+            System.out.println("error in deletblock "+e.getMessage());
+        }
+    }
 }
+    

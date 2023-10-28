@@ -79,6 +79,6 @@ public class Encryption {
         File parent = new File("/home/sarangsu/java/whatsapp/database");
         File child = new File(parent, "userlist.txt");
        new Encryption(child).encryptTheFile();
-        // new Encryption(child).decryptTheFile();
+       //  new Encryption(child).decryptTheFile();
     }
 }

@@ -106,6 +106,48 @@ public class Message {
         reWrite_Message_File(sendermessagelist,new File(Database, sender));
         return message;
     }
+    static ArrayList<String> getMessage(int n ,String user,String reciver)
+    {
+        System.out.println("vlaue of n "+n);
+        System.out.println("----------------------------------------------------------------------------");
+        ArrayList<String>arr = new ArrayList<>();
+        try
+        {
+            System.out.println("in checkig new mesage");
+            File file = new File(Database, user+".txt");
+            System.out.println("the current user "+user);
+            System.out.println("checking the message with the name "+reciver);
+            Scanner s =new Scanner(file);
+            System.out.println("viewing all message in the file to check new message");
+            while(s.hasNextLine())
+            {
+                String pp =s.nextLine();
+                System.out.println(pp);
+                if(pp.split("‡")[1].equals(reciver))
+                {   
+                    // System.out.println(pp.split("‡")[1]+" 00000 "+reciver);
+                    if(--n<0)
+                    {
+                        System.out.println("new message founded "+pp);
+                        arr.add(pp);
+                        // continue;
+                    }
+                    
+                }
+            }
+                // System.out.println("new messages");
+                // for (String ii : arr) 
+                // {
+                //     System.out.println(ii);    
+                // }
+            
+            }
+            catch(Exception e)
+            {
+                System.out.println("error in getting new message");
+            }
+        return(arr);
+    }
     public static void main(String[] args) {
 
     }

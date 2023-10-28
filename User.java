@@ -15,21 +15,24 @@ public class User implements Serializable {
         this.admin = admin ;
     }    
     public static void main(String[] args) {
-
+        ArrayList<User>arr = new ArrayList<>();
+        arr.add(new User("sarang", "sss", "ll", false, null));
+        arr.add(new User("sandy", "sss", "ll", false, null));
+        arr.remove(new User("sarang", "sss", "ll", false, null));
+        for (User  user : arr) {
+            System.out.println(user.name);
+            
+        }
     }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null ) return false;
         User user = (User) obj;
-        return this.name.equals(user.name ) && this.mail_id.equals(user.mail_id);
+        return this.name.equals(user.name ) && this.password.equals(user.password);
     }
     @Override
     public int hashCode() {
-        return Objects.hash(name, mail_id, password ,path ,admin);
+        return Objects.hash(name, password);
     }
-    @Override 
-    public String toString() {
-        return "hello fef";
-     }
 }

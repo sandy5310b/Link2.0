@@ -4,6 +4,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.DayOfWeek;
@@ -13,25 +14,26 @@ import java.time.format.DateTimeFormatter;
 
 public class Client {
     public Socket socket;
-    PrintWriter pr;
+    ObjectInputStream br ;
+    ObjectOutputStream pr ;
     String allUsers;
-    BufferedReader br;
     User user;
     Scanner s = new Scanner(System.in);
 
     public Client() {
         System.out.println("in constructor");
         try {
-            socket = new Socket("localhost", 1234);
-            pr = new PrintWriter(socket.getOutputStream(), true);
-            br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            socket = new Socket("localhost", 9090);
+            System.out.println("connectd to tghe server");
+            br = new ObjectInputStream(socket.getInputStream());
+            pr =new ObjectOutputStream(socket.getOutputStream());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     void start() throws Exception {
-        allUsers = br.readLine();
+        allUsers = (String)br.readObject();
         System.out.println(color.bold_blue + "ent 1 to login" + color.resetColor);
         System.out.println(color.bold_blue + "ent 2 to signup" + color.resetColor);
         System.out.println(color.bold_blue + "ent 3 to exit" + color.resetColor);
@@ -48,7 +50,7 @@ public class Client {
             }
             break;
         }
-        pr.println(ch);
+        pr.writeObject(ch+"");
         switch (ch) {
             case 1:
                 login();
@@ -71,10 +73,10 @@ public class Client {
             String username = s.nextLine();
             System.out.println("Ent the password");
             Console console = System.console();
-            String password = new String(console.readPassword());
+            /*  String password = new String(console.readPassword());*/String password="Qwerty@123#";
             String login_sender = "login:" + username + ":" + password;
-            pr.println(login_sender);
-            String login_clent_response[] = br.readLine().split(":");
+            pr.writeObject(login_sender);
+            String login_clent_response[] = ((String)br.readObject()).split(":");
             if (login_clent_response[0].equals("go")) {
                 user = new User(login_clent_response[1], login_clent_response[2], null,
                         login_clent_response[3].equals("t"), null);
@@ -87,10 +89,10 @@ public class Client {
                 System.out.println("2 -- > go back to index page");
                 int ch = Integer.parseInt(s.nextLine());
                 if (ch == 2) {
-                    pr.println("go-back");
+                    pr.writeObject("go-back");
                     start();
                 }
-                pr.println("retry");
+                pr.writeObject("retry");
             }
 
         }
@@ -106,8 +108,8 @@ public class Client {
         String mailId = s.nextLine();
         Console console = System.console();
         String password = "";
-        pr.println(userName + ":" + mailId);
-        String add_user_response = br.readLine();
+        pr.writeObject(userName + ":" + mailId);
+        String add_user_response = (String)br.readObject();
         System.out.println("server response for addding  " + add_user_response);
         if (add_user_response.equals("go")) {
             while (true) {
@@ -116,7 +118,7 @@ public class Client {
                             console.readPassword(color.bold_blue + "Enter password: " + color.resetColor));
                     if (PasswordChecker.identifyPasswordStrength(password)) {
                         System.out.println("password is strong");
-                        pr.println(userName + ":" + mailId + ":" + password + ":");
+                        pr.writeObject(userName + ":" + mailId + ":" + password + ":");
                         break;
                     } else {
                         // System.out.println(bold_red+"Password Is Not Strong\nrenter the password");
@@ -126,25 +128,23 @@ public class Client {
                     System.out.println(color.bold_red + "password is not strong retry" + color.resetColor);
                 }
             }
-            // obj.addUser(userName, mailId, password, false);
-
         } else {
             System.out.println(color.bold_red + add_user_response + color.resetColor);
             System.out.println(" 1  - > retry");
             System.out.println(" 2  - > go back");
             int ch = Integer.parseInt((s.nextLine()));
             if (ch == 1) {
-                pr.println("go");
+                pr.writeObject("go");
                 signUp();
             } else {
-                pr.println("exit");
+                pr.writeObject("exit");
                 start();
             }
         }
         System.out.println("ss");
         // pr.println("signup:"+userName+":"+password+":"+mailId);
         System.out.println("ss");
-        if (br.readLine().equals("go")) {
+        if (((String)br.readObject()).equals("go")) {
             System.out.println("user added succesfully");
         } else {
             System.out.println("error in adding the user");
@@ -153,7 +153,7 @@ public class Client {
         // if()
     }
 
-    public void messageUser() 
+    public void messageUser() throws Exception
     {
         System.out.println("Select the user to message with no");
         int i = 1;
@@ -165,10 +165,11 @@ public class Client {
         }
         int ch = s.nextInt();
         // System.out.println("user want to see the message of " + splitter[ch - 1]);
-        pr.println(splitter[ch - 1]);
+        pr.writeObject(splitter[ch - 1]);
         try
         {
         ObjectInputStream ob = new ObjectInputStream(socket.getInputStream());
+        // ob.reset();
         ArrayList<String> arr = (ArrayList<String>)ob.readObject();
         // System.out.println("got all the packets");
         for (String string : arr) 
@@ -184,17 +185,23 @@ public class Client {
             if(message.equals("exit"))
             {
                 System.out.println("the user want to got to the dashbord");
-                pr.println("exit");
+                pr.writeObject("exit");
                 dashBord();
             }
             else if(message.equals(""))
             {
                 System.out.println("checking for new messages");
-                pr.println("new");
-                String temp = br.readLine();
+                pr.writeObject("new");
+                String temp = (String)br.readObject();
                 if(temp.equals("go"))
                 {
-                    
+                    System.out.println("the message for new message "+temp);
+                    System.out.println("has new message from server");
+                    // br.readLine();
+                    // socket.getInputStream().
+                    // ObjectInputStream ob = new ObjectInputStream(socket.getInputStream());
+                    System.out.println(ob.getClass());
+                    // System.out.println(ob.readObject());
                     ArrayList<String> arri = (ArrayList<String>)ob.readObject();
                     for (String mess : arri) 
                     {
@@ -202,6 +209,7 @@ public class Client {
                         System.out.println(timing(mess.split("‡")[3])); 
                         System.out.println(mess.split("‡")[2]);   
                     }
+                    System.out.println("read all packets");
                 }
                 else
                 {
@@ -211,7 +219,7 @@ public class Client {
             else
             {
                 System.out.println("the user want to continue to message");
-                pr.println(message);
+                pr.writeObject(message);
             }  
         }
         
@@ -219,6 +227,7 @@ public class Client {
         catch(Exception e)
         {
             System.out.println(e.getMessage());
+            System.out.println(e);
             System.out.println("some error in printing message user block");
         }        
     }
@@ -344,12 +353,12 @@ public class Client {
             if(Character.toLowerCase(ch)=='y')
             {
                 System.out.println("user gave the confirmation to delete the account");
-                pr.println("delete");
+                pr.writeObject("delete");
                 start();
             }
             else
             {
-                pr.print("go");
+                pr.writeObject("go");
                 dashBord(); 
             }
         }catch(Exception e)
@@ -357,8 +366,7 @@ public class Client {
             System.out.println("error in deleting the user");
         }
     }
-    // public newMessage()
-    public void dashBord() {
+    public void dashBord()throws Exception {
         System.out.println("1 -- > Message");
         System.out.println("3 -- > delete account ");
         System.out.println("3 -- > Status");
@@ -366,7 +374,7 @@ public class Client {
         int i = s.nextInt();
         switch (i) {
             case 1:
-                pr.println(1);
+                pr.writeObject(1+"");
                 messageUser();
                 break;
             case 2:
@@ -374,7 +382,7 @@ public class Client {
                 viewAllUser();
                 break;
             case 3:
-                pr.println(3);
+                pr.writeObject(3);
                 delAccount();
                 break;
             default:
@@ -384,7 +392,6 @@ public class Client {
         }
 
     }
-
     public static void main(String[] args) throws Exception {
         Client obj = new Client();
         obj.start();

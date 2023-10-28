@@ -1,12 +1,15 @@
 import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class ClientHandler extends Thread
@@ -14,21 +17,29 @@ public class ClientHandler extends Thread
     public Socket socket;
     public DataManager dataManager; 
     User user; 
-    BufferedReader br ;
-    PrintWriter pr ;
-    public ClientHandler(Socket socket , DataManager dataManager)
+    ObjectInputStream br ;
+    ObjectOutputStream pr ;
+    public ClientHandler(Socket socket , DataManager dataManager)throws Exception
     {
+        System.out.println("inside the clienthandler constructor");
         this.socket = socket;
         this.dataManager = dataManager ;
-        try {
-            br =new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            pr =new PrintWriter(socket.getOutputStream(),true);
-        } catch (Exception e) { 
-            System.out.println("error in the clienhadler contructor");
+        try
+        {
+            System.out.println("inside try block");
+            pr = new ObjectOutputStream(socket.getOutputStream());
+            br = new ObjectInputStream(socket.getInputStream());
+            System.out.println("exiting try block");
+        }
+        catch(Exception e)
+        {
+            System.out.println("hhe");
         }
     }    
     public void run()
     {
+       
+        System.out.println("insidd start ");
         try 
         {
             Start();
@@ -41,10 +52,11 @@ public class ClientHandler extends Thread
     }
     void Start()throws Exception
     {
-        pr.println(dataManager.allUser);
+        System.out.println("starting . . . ");
+        pr.writeObject(dataManager.allUser);
         while(true)
         {
-        String temp = br.readLine();
+        String temp = (String)br.readObject();
         System.out.println("choise "+temp);
         int n = Integer.parseInt(temp);
         System.out.println("the user choise is "+n);
@@ -61,7 +73,7 @@ public class ClientHandler extends Thread
     {
         try{
         System.out.println("in signUp block");
-        String arr[] = br.readLine().split(":"); 
+        String arr[] = ((String)br.readObject()).split(":"); 
         System.out.println("request to add "+Arrays.toString(arr));
         String add_user_response ="";
                 while(true)
@@ -70,24 +82,24 @@ public class ClientHandler extends Thread
                     System.out.println("respons efrom data base "+ (add_user_response));
                     if(add_user_response.split(":")[0].equals("error"))
                     {
-                        pr.println(add_user_response);
-                        String temp = br.readLine();
+                        pr.writeObject(add_user_response);
+                        String temp = (String)br.readObject();
                         if(temp.equals("exit"))
                         {
                             System.out.println("user want to go the index page");
                             Start();
                         }
-                        arr = br.readLine().split(":");
+                        arr = ((String)br.readObject()).split(":");
                     }
                     else
                     {
                         System.out.println("user can be added to the list");
-                        pr.println("go");
-                        String temp[] = br.readLine().split(":");
+                        pr.writeObject("go");
+                        String temp[] = ((String)br.readObject()).split(":");
                         // sy
                         dataManager.addUser(temp[0], temp[1], temp[2], false);
                         System.out.println(Arrays.toString(temp));
-                        pr.println("go");
+                        pr.writeObject("go");
                         Start(); 
                         break;
                     }
@@ -100,20 +112,39 @@ public class ClientHandler extends Thread
                 System.out.println(e.getMessage());
             }
     }
+    void delAccount()
+    {
+        try 
+        {
+            String ch = (String)br.readObject();
+            if(ch.equals("delete"))
+            {
+                System.out.println("requst from the client to delete the user "+user.name);
+                dataManager.delete(user);
+            }
+            start();
+        } 
+        catch (Exception e) 
+        {
+            // TODO: handle exception
+        }
+        
+    }
     void SignIn()throws Exception
     {
-        String arr[] = br.readLine().split(":"); 
+        System.out.println("is signin block");
+        String arr[] = ((String)br.readObject()).split(":"); 
         user = dataManager.isValidUser(arr[1], arr[2]);
         if(user!=null)
         {
-            pr.println("go:"+user.name+":"+user.mail_id+":"+(user.admin?"t":"f"));
+            pr.writeObject("go:"+user.name+":"+user.mail_id+":"+(user.admin?"t":"f"));
             System.out.println("password is correct");
             DashBord();
         }
         else{
-                pr.println("error"); 
+                pr.writeObject("error"); 
         } 
-        String temp = br.readLine();
+        String temp = (String)br.readObject();
         if(temp.equals("retry"))
         {
             System.out.println("client requested to retry");
@@ -122,50 +153,84 @@ public class ClientHandler extends Thread
         else
         {
             System.out.println("proceed user page");
-            DashBord();
+            start();
         }
     }
     void DashBord() throws Exception
     {
         System.out.println("hello sarang");
-        int choice = Integer.parseInt(br.readLine());
+        int choice = Integer.parseInt((String)br.readObject());
         switch(choice)
         {
             case 1 :
                     System.out.println("user want to go to message section");
                     message();
                     break;
+            case 3 : 
+                    System.out.println("user requested to delete the account");
+                    delAccount();
+                    break;
 
         }
+    }
+    void message1()
+    {
+        System.out.println("The user is requsting to see the messages");
+
     }
     void message()
     {
         System.out.println("the name of the user  is "+user.name);
         try
         {
-            String reciver = br.readLine();
+            String reciver = (String)br.readObject();
             System.out.println("request form the client to see the message of "+reciver);
             ObjectOutputStream ob = new ObjectOutputStream(socket.getOutputStream());
             System.out.println("hello reciver ");
-            ob.writeObject(dataManager.message(user.name,reciver));
+            ArrayList<String>messageList = dataManager.message(user.name,reciver);
+            int count = 0;
+            for (String string : messageList) {
+                if(string.split("‡")[1].equals(reciver))
+                {
+                    count ++;
+                }
+            }
+            // pr.println(reciver);
+            ob.writeObject(messageList);
             ob.flush();
             System.out.println("sended all the packets");
             while(true)
             {
-                // Thread thread = new Thread(() ->
-                // {
-                //     File 
-                // });
                 System.out.println("heloo waithing  for the response in the message block");
-                String temp = br.readLine();
+                String temp = (String)br.readObject();
                 System.out.println(temp);
-                System.out.println("heloo waithing  for the response in the message block");
-                System.out.println("temp==null"+(temp==null));
-                System.out.println(temp.equals("null"));
-                if(temp.equals("null"))
+                if(temp.equals("exit"))
                 {
                     System.out.println("client want to stop the message");
                     DashBord();
+                }
+                else if(temp.equals("new"))
+                {
+                    System.out.println("the user want to get new message");
+                    ArrayList<String> array = dataManager.getNewMessage(count,user.name,reciver);
+                    for (String kk : array) 
+                    {
+                        System.out.println(kk);    
+                    }
+                    if(array.size()==0)
+                    {
+                        System.out.println("no new message");
+                        pr.writeObject("no");
+                    }
+                    else
+                    {
+                        count += array.size(); 
+                        System.out.println("has new message in the file");
+                        pr.writeObject("go");
+                        ob.writeObject(array);
+                        ob.flush();
+                        System.out.println("All the new message packet are sended succesfully from the client side");
+                    }
                 }
                 else
                 {
@@ -173,7 +238,7 @@ public class ClientHandler extends Thread
                     DateTimeFormatter pp = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm");
                     try
                     {
-                        String pps = ("f‡"+"sarang"+'‡'+temp+'‡'+LocalDateTime.now().format(pp));
+                        String pps = ("f‡"+user.name+'‡'+temp+'‡'+LocalDateTime.now().format(pp));
                         dataManager.writeMessage(pps,reciver);
                     }
                     catch(Exception e)
@@ -184,7 +249,6 @@ public class ClientHandler extends Thread
                     
                 }
             }
-            // System.out.println("hello from theb ending");
         }
         catch(Exception e)    
         {
